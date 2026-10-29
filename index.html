@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Study Buddy - CCNP + FortiGate</title>
+<!--
+  AI STUDY BUDDY - single file, ready for GitHub Pages.
+  HOW TO HOST ON GITHUB PAGES:
+  1. Create a new public repository on GitHub (any name, e.g. ai-study-buddy).
+  2. Upload this file as index.html in the root of that repository.
+  3. Go to Settings > Pages, set Source to "Deploy from a branch", Branch to main, Folder to / (root), and Save.
+  4. Open the Pages URL GitHub gives you, on any phone or laptop.
+  No build step, no other files, no server code. Everything runs in the browser.
+  Sound uses the device's own speech synthesis, so it works best on https (GitHub Pages) with volume on.
+-->
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#FDF8F0;color:#2B2118}
+header{background:#2B2118;color:#FDF8F0;padding:30px 20px 24px;text-align:center}
+header h1{margin:0 0 8px;font-family:Georgia,serif;font-size:32px}
+header p{margin:5px 0;color:#E8DCC6;font-size:15px;line-height:1.55}
+.badge{display:inline-block;border:1.5px solid #C9973F;color:#E9C07A;border-radius:20px;padding:4px 14px;font-size:12px;letter-spacing:1.5px;font-weight:bold}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+.card{background:#FFFDF8;border:1px solid #E3D5BC;border-left:5px solid #B07D3C;padding:16px 18px;margin-bottom:16px;border-radius:10px}
+.card h2{margin:0 0 8px;font-family:Georgia,serif;font-size:21px}
+.card p,.card li{font-size:15px;line-height:1.6}
+#chat{border:1px solid #E3D5BC;background:#fff;border-radius:12px;overflow:hidden}
+#messages{height:420px;overflow-y:auto;padding:16px;background:#FFFDF8}
+.msg{max-width:88%;padding:11px 14px;border-radius:16px;margin-bottom:12px;font-size:15px;line-height:1.55}
+.msg b{display:block;margin-bottom:3px;font-size:13px;letter-spacing:.5px}
+.user{background:#2B2118;color:#FDF8F0;margin-left:auto;border-bottom-right-radius:4px}
+.bot{background:#F7ECD6;color:#2B2118;margin-right:auto;border-bottom-left-radius:4px}
+.say{margin-top:8px;border:1px solid #B07D3C;background:#fff;color:#7A5C33;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:bold}
+#composer{display:flex;gap:8px;padding:12px;background:#fff;border-top:1px solid #E3D5BC}
+#q{flex:1;padding:13px 14px;font-size:16px;border:1.5px solid #E3D5BC;border-radius:8px}
+button.send{background:#C1663E;color:#fff;border:none;border-radius:8px;padding:0 22px;font-size:16px;font-weight:bold;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{border:1.5px solid #B07D3C;background:#fff;color:#7A5C33;border-radius:20px;padding:7px 13px;cursor:pointer;font-size:14px;font-weight:bold}
+.chip:hover{background:#FDF6EA}
+.toggle{border:1.5px solid #B07D3C;background:#fff;color:#7A5C33;border-radius:20px;padding:8px 14px;cursor:pointer;font-weight:bold}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.opt{display:block;width:100%;text-align:left;margin:0 0 8px;padding:12px 14px;border:1.5px solid #E3D5BC;background:#fff;border-radius:10px;font-size:15px;cursor:pointer}
+.opt:hover{background:#FDF6EA}
+.opt.right{border-color:#3D6428;background:#E8F0E2}
+.opt.wrong{border-color:#8A2F16;background:#FBE3DA}
+.small{font-size:13px;color:#7A5C33}
+svg{width:100%;height:auto;background:#FFFDF8;border:1px solid #E3D5BC;border-radius:8px;margin:8px 0}
+@media(max-width:600px){#messages{height:360px}.msg{max-width:94%}}
+</style>
+</head>
+<body>
+<header>
+<span class="badge">CCNP + FORTIGATE</span>
+<h1>AI Study Buddy</h1>
+<p>For Nidha Susan</p>
+<p>Ask any CCNP or FortiGate question in simple words. You get a super-simple answer with an example, and it is also spoken out loud. Or try the quiz below.</p>
+</header>
+<main>
+<div class="card">
+<h2>Meet your plushie teachers</h2>
+<p>Tap a friend to ask about their topic. <b>Switchy</b> (switching), <b>Ollie</b> (OSPF), <b>Ellie</b> (EIGRP), <b>Benny</b> (BGP), <b>Fiona</b> (firewall), <b>Vinny</b> (VPN), <b>Queenie</b> (QoS), <b>Natty</b> (NAT). Or just type anything, like "what is OSPF in simple words?"</p>
+<div class="chips" id="plushies"></div>
+</div>
+
+<div class="topbar">
+<div class="chips" style="margin:0">
+<button class="chip" data-q="What is OSPF in simple words?">What is OSPF?</button>
+<button class="chip" data-q="What is a firewall?">What is a firewall?</button>
+<button class="chip" data-q="SNAT vs DNAT">SNAT vs DNAT</button>
+<button class="chip" data-q="IPsec Phase 1 and Phase 2">IPsec phases</button>
+<button class="chip" data-q="What is STP?">What is STP?</button>
+</div>
+<button class="toggle" id="soundBtn" type="button">Sound: ON</button>
+</div>
+
+<div id="chat" style="margin-top:12px">
+<div id="messages"></div>
+<div id="composer">
+<input id="q" type="text" placeholder="Ask me anything... e.g. what is BGP?" autocomplete="off">
+<button class="send" id="sendBtn" type="button">Send</button>
+</div>
+</div>
+<p class="small">Tip: if sound does not play, tap "Say it again" under an answer, and check your device volume. This buddy answers from the CCNP + FortiGate guide only, in super-simple words. It is a study helper, not a live firewall or an exam.</p>
+
+<div class="card" id="quizCard">
+<h2>Quiz Mode</h2>
+<p id="quizScore">Score: 0 &nbsp;|&nbsp; Streak: 0 &nbsp;|&nbsp; Question: 0 of 24</p>
+<p id="quizQ" style="font-weight:bold">Tap "Start Quiz" to begin. Questions go from simple to hard, across all topics.</p>
+<div id="quizOpts"></div>
+<p id="quizFeedback"></p>
+<button class="chip" id="quizBtn" type="button">Start Quiz</button>
+<button class="chip" id="quizNext" type="button" style="display:none">Next Question</button>
+</div>
+
+<div class="card">
+<h2>Diagrams, in one look</h2>
+<h3>OSI layers, bottom to top</h3>
+<svg viewBox="0 0 620 210"><rect x="180" y="8" width="260" height="24" fill="#2B2118"/><text x="310" y="25" text-anchor="middle" fill="#FDF8F0" font-size="13" font-weight="bold">7 Application - browser</text><rect x="180" y="34" width="260" height="24" fill="#5A4632"/><text x="310" y="51" text-anchor="middle" fill="#FDF8F0" font-size="13">6 Presentation - format, encryption</text><rect x="180" y="60" width="260" height="24" fill="#7A5C33"/><text x="310" y="77" text-anchor="middle" fill="#FDF8F0" font-size="13">5 Session - start / keep / end talk</text><rect x="180" y="86" width="260" height="24" fill="#B07D3C"/><text x="310" y="103" text-anchor="middle" fill="#FDF8F0" font-size="13">4 Transport - TCP / UDP, ports</text><rect x="180" y="112" width="260" height="24" fill="#C1663E"/><text x="310" y="129" text-anchor="middle" fill="#FDF8F0" font-size="13">3 Network - IP address, routing</text><rect x="180" y="138" width="260" height="24" fill="#8A5A1F"/><text x="310" y="155" text-anchor="middle" fill="#FDF8F0" font-size="13">2 Data Link - MAC, switch</text><rect x="180" y="164" width="260" height="24" fill="#2B2118"/><text x="310" y="181" text-anchor="middle" fill="#FDF8F0" font-size="13">1 Physical - cable, Wi-Fi</text><text x="20" y="110" font-size="13" fill="#5A4632">Data travels down</text><text x="20" y="128" font-size="13" fill="#5A4632">one side, up the</text><text x="20" y="146" font-size="13" fill="#5A4632">other side.</text><text x="470" y="110" font-size="13" fill="#5A4632">Please Do Not</text><text x="470" y="128" font-size="13" fill="#5A4632">Throw Sausage</text><text x="470" y="146" font-size="13" fill="#5A4632">Pizza Away</text></svg>
+<h3>VLANs: one switch, two separate rooms</h3>
+<svg viewBox="0 0 620 150"><rect x="200" y="50" width="220" height="50" fill="#2B2118" rx="8"/><text x="310" y="80" text-anchor="middle" fill="#FDF8F0" font-size="14" font-weight="bold">SWITCH</text><rect x="20" y="20" width="130" height="34" fill="#E8C9A8"/><text x="85" y="42" text-anchor="middle" font-size="13" font-weight="bold">PC - VLAN 10 Sales</text><rect x="20" y="100" width="130" height="34" fill="#F3E3C2"/><text x="85" y="122" text-anchor="middle" font-size="13" font-weight="bold">PC - VLAN 20 HR</text><rect x="470" y="20" width="130" height="34" fill="#E8C9A8"/><text x="535" y="42" text-anchor="middle" font-size="13" font-weight="bold">PC - VLAN 10 Sales</text><rect x="470" y="100" width="130" height="34" fill="#F3E3C2"/><text x="535" y="122" text-anchor="middle" font-size="13" font-weight="bold">PC - VLAN 20 HR</text></svg>
+<p>Sales talks to Sales, HR talks to HR, even on one switch. Different VLANs need a router to talk.</p>
+<h3>Firewall zones: who may go where?</h3>
+<svg viewBox="0 0 620 170"><rect x="20" y="60" width="110" height="50" fill="#C1663E" rx="8"/><text x="75" y="82" text-anchor="middle" fill="#FDF8F0" font-size="13" font-weight="bold">INTERNET</text><text x="75" y="100" text-anchor="middle" fill="#FDF8F0" font-size="12">Untrusted</text><rect x="240" y="50" width="140" height="70" fill="#2B2118" rx="8"/><text x="310" y="80" text-anchor="middle" fill="#FDF8F0" font-size="13" font-weight="bold">FORTIGATE</text><text x="310" y="100" text-anchor="middle" fill="#FDF8F0" font-size="12">Fiona the Fox</text><rect x="470" y="15" width="130" height="50" fill="#E8C9A8" rx="8"/><text x="535" y="37" text-anchor="middle" font-size="13" font-weight="bold">DMZ</text><text x="535" y="55" text-anchor="middle" font-size="12">Public web server</text><rect x="470" y="100" width="130" height="50" fill="#F3E3C2" rx="8"/><text x="535" y="122" text-anchor="middle" font-size="13" font-weight="bold">LAN</text><text x="535" y="140" text-anchor="middle" font-size="12">Office PCs</text><text x="310" y="160" text-anchor="middle" font-size="12" fill="#5A4632">Internet to DMZ: port 443 only. Internet to LAN: denied. LAN to Internet: allowed.</text></svg>
+<h3>NAT and VPN, in one look</h3>
+<svg viewBox="0 0 620 150"><rect x="20" y="55" width="140" height="50" fill="#E8C9A8" rx="8"/><text x="90" y="78" text-anchor="middle" font-size="13" font-weight="bold">Office PC</text><text x="90" y="96" text-anchor="middle" font-size="12">10.0.0.5 private</text><rect x="240" y="50" width="140" height="60" fill="#2B2118" rx="8"/><text x="310" y="77" text-anchor="middle" fill="#FDF8F0" font-size="13" font-weight="bold">FORTIGATE</text><text x="310" y="97" text-anchor="middle" fill="#FDF8F0" font-size="12">NAT happens here</text><rect x="460" y="55" width="140" height="50" fill="#F3E3C2" rx="8"/><text x="530" y="78" text-anchor="middle" font-size="13" font-weight="bold">Internet</text><text x="530" y="96" text-anchor="middle" font-size="12">203.0.113.10 public</text><text x="310" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#5A4632">SNAT out: 10.0.0.5 becomes 203.0.113.10. DNAT / VIP in: public IP becomes the server.</text><text x="310" y="140" text-anchor="middle" font-size="13" fill="#5A4632">VPN: an encrypted tunnel, like a secret pipe, between branch and head office.</text></svg>
+<h3>OSPF areas: one backbone, many rooms</h3>
+<svg viewBox="0 0 620 170"><rect x="230" y="55" width="160" height="60" fill="#2B2118" rx="10"/><text x="310" y="82" text-anchor="middle" fill="#FDF8F0" font-size="14" font-weight="bold">AREA 0</text><text x="310" y="102" text-anchor="middle" fill="#FDF8F0" font-size="12">Backbone</text><rect x="20" y="55" width="140" height="60" fill="#E8C9A8" rx="10"/><text x="90" y="82" text-anchor="middle" font-size="14" font-weight="bold">AREA 1</text><text x="90" y="102" text-anchor="middle" font-size="12">Branch office</text><rect x="460" y="55" width="140" height="60" fill="#F3E3C2" rx="10"/><text x="530" y="82" text-anchor="middle" font-size="14" font-weight="bold">AREA 2</text><text x="530" y="102" text-anchor="middle" font-size="12">Second branch</text><text x="310" y="145" text-anchor="middle" font-size="13" fill="#5A4632">Rule: every area must touch Area 0, like every room opens onto the main hall.</text></svg>
+</div>
+
+<div class="card">
+<h2>Last-Night Top 20</h2>
+<ol>
+<li>OSPF is link-state, cost-based, Area 0 is the backbone.</li>
+<li>EIGRP uses DUAL; the feasible successor is a ready, loop-free backup.</li>
+<li>BGP picks by Weight, Local Preference, then shortest AS Path.</li>
+<li>STP blocks loops; RSTP converges in seconds, not 30-50.</li>
+<li>EtherChannel: use LACP, the open standard, not PAgP.</li>
+<li>HSRP is Cisco, VRRP is open, GLBP load-balances.</li>
+<li>QoS prioritises voice and video when links are busy.</li>
+<li>DHCP Snooping + DAI + Port Security stop rogue servers and ARP spoofing.</li>
+<li>A firewall denies by default; policies are checked top to bottom.</li>
+<li>Stateful firewalls remember sessions; stateless ones do not.</li>
+<li>SNAT hides LAN users behind one public IP; DNAT / VIP publishes a server.</li>
+<li>NGFW adds application control, IPS, antivirus and web filtering.</li>
+<li>IPS blocks attacks; IDS only reports them.</li>
+<li>SSL inspection decrypts HTTPS to inspect it; it needs a CA on devices.</li>
+<li>IPsec Phase 1 builds the management tunnel; Phase 2 carries data.</li>
+<li>SSL VPN is for travelling users; IPsec VPN is for site-to-site.</li>
+<li>FortiGate HA: Active-Passive waits; Active-Active shares the load.</li>
+<li>SD-WAN steers each app to the healthiest WAN link automatically.</li>
+<li>Troubleshoot in order: link, IP, route, policy, NAT, application.</li>
+<li>Always check the log and the policy ID before changing anything.</li>
+</ol>
+</div>
+</main>
+<script>
+var soundOn = true;
+var messagesEl = document.getElementById('messages');
+var inputEl = document.getElementById('q');
+var soundBtn = document.getElementById('soundBtn');
+function speak(text) {
+  if (!soundOn) return;
+  if (!window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95; u.pitch = 1;
+    var voices = window.speechSynthesis.getVoices();
+    var v = voices.find(function(x){ return /en[-_]IN/i.test(x.lang); }) || voices.find(function(x){ return /^en/i.test(x.lang); });
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+if (window.speechSynthesis) { window.speechSynthesis.getVoices(); }
+function addMsg(text, who) {
+  var div = document.createElement('div');
+  div.className = 'msg ' + who;
+  var label = document.createElement('b');
+  label.textContent = who === 'user' ? 'You' : 'Study Buddy';
+  div.appendChild(label);
+  var body = document.createElement('div');
+  body.textContent = text;
+  div.appendChild(body);
+  if (who === 'bot') {
+    var b = document.createElement('button');
+    b.className = 'say'; b.type = 'button'; b.textContent = 'Say it again';
+    b.onclick = function(){ speak(text); };
+    div.appendChild(b);
+  }
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function botSay(text) { addMsg(text, 'bot'); speak(text); }
+soundBtn.onclick = function() {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'Sound: ON' : 'Sound: OFF';
+  if (!soundOn && window.speechSynthesis) window.speechSynthesis.cancel();
+};
+
+var QA = [
+{k:['osi','layer'],a:"OSI has 7 layers, bottom to top: Physical, Data Link, Network, Transport, Session, Presentation, Application. Remember: Please Do Not Throw Sausage Pizza Away. Example: a switch works at Layer 2, a router works at Layer 3."},
+{k:['tcp','udp','difference'],a:"TCP is reliable, like registered post: it checks delivery and resends lost parts. Use it for web and email. UDP is fast, like shouting across a room: no delivery check. Use it for video calls and live streaming, where speed matters more."},
+{k:['vlan'],a:"A VLAN splits one switch into separate logical networks, like separate rooms in one house. Example: Sales PCs in VLAN 10 talk to Sales only, HR PCs in VLAN 20 talk to HR only. Different VLANs need a router to talk to each other."},
+{k:['trunk','access port'],a:"An access port belongs to one VLAN and connects to a PC. A trunk port carries many VLANs at once and connects switches together. Trunks tag traffic with 802.1Q so the other side knows which VLAN each frame belongs to."},
+{k:['subnet'],a:"Subnetting divides a large network into smaller networks. Example: 192.168.1.0 slash 24 gives 256 addresses. Borrowing 2 bits makes slash 26, which gives 4 subnets of 64 addresses each. Usable hosts = 2 to the power of host bits, minus 2."},
+{k:['stp','spanning tree','loop'],a:"STP stops loops in a network with redundant links. Without it, broadcast frames circle forever and crash the network - a broadcast storm. STP blocks one link, so traffic takes one clean path, and wakes the blocked link if a working link fails."},
+{k:['rstp','rapid'],a:"RSTP is the faster version of STP. Classic STP takes 30 to 50 seconds to converge. RSTP takes about 1 to 3 seconds, because it uses proposal and agreement messages instead of waiting on timers."},
+{k:['portfast','bpdu'],a:"PortFast lets an access port go to Forwarding immediately, so a PC does not wait 30 seconds for DHCP. BPDU Guard protects it: if a switch is plugged into a PortFast port, the port shuts down. Use them together on every access port."},
+{k:['etherchannel','lacp','pagp'],a:"EtherChannel bundles 2 to 8 physical links into one logical link, adding bandwidth and backup. Example: two 1 Gbps links become one 2 Gbps link, and if one cable fails, traffic keeps flowing. Use LACP, the open standard, not Cisco-only PAgP."},
+{k:['ospf'],a:"OSPF is a link-state routing protocol. Every router builds a full map of the network, then finds the shortest path using cost. It uses areas for scale, and Area 0 is the backbone. Example: head office in Area 0, each branch in its own area, so a branch problem stays small."},
+{k:['ospf neighbour','ospf neighbor','stuck','exstart'],a:"OSPF neighbour states, in order: Down, Init, 2-Way, ExStart, Exchange, Loading, Full. Stuck in ExStart usually means an MTU mismatch. Stuck in 2-Way usually means a DR or BDR election issue. Check with show ip ospf neighbor."},
+{k:['dr','bdr','designated'],a:"On broadcast networks, the DR (Designated Router) and its backup BDR reduce adjacencies: all routers peer only with the DR and BDR, which flood updates to everyone. Election uses the highest priority, then the highest Router ID."},
+{k:['lsa'],a:"OSPF LSA types: Type 1 Router, inside its area. Type 2 Network, from the DR. Type 3 Summary, between areas. Type 4 ASBR Summary. Type 5 External, redistributed routes. Type 7 NSSA External, external routes inside an NSSA area."},
+{k:['stub','totally stubby','nssa'],a:"A stub area blocks Type 5 external routes and uses a default route instead. A totally stubby area blocks Types 3, 4 and 5, so only a default route enters. An NSSA area is like a stub area but allows an ASBR inside it to inject external routes as Type 7."},
+{k:['eigrp'],a:"EIGRP is Cisco's advanced distance-vector protocol. It uses DUAL, keeps a backup route ready, and converges very fast. Its metric is bandwidth and delay by default."},
+{k:['successor','feasible'],a:"The successor is the best route, installed in the routing table. The feasible successor is a backup route that is guaranteed loop-free, ready instantly if the successor fails. Think of a main road and a side road you already checked: if the main road closes, you turn at once."},
+{k:['bgp'],a:"BGP routes traffic between autonomous systems, like between a company and its ISPs. It is slow but very stable and policy-driven, which is why it runs the internet. It uses TCP port 179."},
+{k:['bgp path','path selection','local preference','weight'],a:"BGP path selection, in order: highest Weight, then highest Local Preference, then locally originated route, then shortest AS Path, then lowest Origin, then lowest MED, then eBGP over iBGP. Most interviews only need the first three."},
+{k:['ibgp','ebgp','route reflector'],a:"eBGP runs between different AS numbers, iBGP runs inside the same AS. iBGP has a split-horizon rule: a route learned from one iBGP peer is never passed to another, so without a fix you need a full mesh. Route reflectors relax this safely: clients peer only with the reflector."},
+{k:['as path prepending'],a:"AS path prepending repeats your own AS number several times in the advertised path, making that path look longer, so other networks prefer a different, shorter path to reach you. It steers inbound internet traffic toward your preferred ISP."},
+{k:['redistribution'],a:"Redistribution moves routes from one routing protocol into another, for example EIGRP into OSPF. Always set a metric and use route tags, and filter carefully, or you can create loops and route feedback."},
+{k:['hsrp','vrrp','glbp','gateway'],a:"HSRP, VRRP and GLBP give PCs one virtual gateway IP shared by routers, so the gateway never becomes a single point of failure. HSRP is Cisco-only with one active router. VRRP is the open standard version. GLBP is Cisco-only and load-balances, so different PCs use different active routers."},
+{k:['qos'],a:"QoS decides which traffic gets priority when a link is busy. Voice and video go first, because delay ruins a call. File downloads wait. Think of an airport queue: the pilot, the voice call, boards first, while suitcases, the downloads, wait."},
+{k:['acl','standard','extended'],a:"A standard ACL filters only by source address, so place it close to the destination, or it blocks too much. An extended ACL filters by source, destination, protocol and port, so place it close to the source, to stop unwanted traffic early. Remember: standard near destination, extended near source."},
+{k:['dhcp snooping','dai','port security'],a:"DHCP Snooping trusts only the real DHCP server port and blocks fake servers. Dynamic ARP Inspection uses that table to block fake ARP replies. Port Security limits how many MAC addresses one port may learn, blocking unknown devices."},
+{k:['aaa','radius','tacacs'],a:"AAA means Authentication, Authorisation and Accounting. Authentication proves who you are. Authorisation decides what you may do. Accounting records what you did, for audit. In enterprises, AAA usually runs on RADIUS or TACACS+ servers."},
+{k:['vpn'],a:"A VPN sends private traffic safely over the public internet by encrypting it. Site-to-site VPN connects two offices permanently, router to router. Remote-access VPN connects one travelling user to the office, usually with a client app and login."},
+{k:['mpls'],a:"MPLS is a service provider technology that forwards packets using short labels instead of long IP lookups, so it is fast and can carry many customers separately. A company buys an MPLS VPN from a provider to connect its branches privately."},
+{k:['sd-wan'],a:"SD-WAN manages branch WAN links, internet, MPLS and 4G, from one central controller. It picks the best link per application in real time. Example: a video call takes the clean fibre link, a file download takes the cheaper 4G link, and if fibre degrades, the call moves automatically."},
+{k:['automation','netconf','restconf','ansible'],a:"Network automation replaces typing the same commands on 50 devices with code. NETCONF and RESTCONF are APIs that let scripts read and change device configuration in structured YANG data. Ansible automates many devices from simple playbooks, and Python with Netmiko is used for custom scripts."},
+{k:['firewall'],a:"A firewall is a device that controls traffic between networks using rules. It allows good traffic and blocks bad traffic. Think of a security gate: every packet must show its source, destination and port, and the firewall checks its rule book before letting it through."},
+{k:['stateful','stateless'],a:"A stateless firewall checks each packet alone, against fixed rules, without remembering anything. A stateful firewall remembers connections: if you start a connection from inside, it automatically allows the reply back. Modern firewalls are stateful."},
+{k:['ngfw','next generation'],a:"A Next-Generation Firewall does everything a classic firewall does, plus application control, intrusion prevention, antivirus, web filtering and user identity. It inspects traffic by application, not just by port, so it can block risky apps that hide on port 443."},
+{k:['dmz','zone','trust','untrust'],a:"Zones group interfaces by trust level. Inside, the LAN, is trusted. Internet, the WAN, is untrusted. The DMZ holds public servers like a website. Rules are zone to zone: LAN to WAN is usually allowed, WAN to LAN is denied by default, and WAN to DMZ allows only the published service ports."},
+{k:['default deny','implicit deny'],a:"A firewall denies everything that is not explicitly allowed. This is safer than allowing everything except known bad traffic, because new attacks are unknown by definition. In FortiGate, the last implicit rule is deny, so traffic with no matching policy is dropped and logged."},
+{k:['fortigate policy','policy order'],a:"A FortiGate policy is one rule: from this source zone, to this destination zone, for this source, destination and service, take this action, accept or deny. FortiGate checks policies top to bottom and stops at the first match, so policy order matters. Specific policies first, general policies last, implicit deny at the bottom."},
+{k:['snat','dnat','nat','vip'],a:"SNAT, Source NAT, changes the source address: many private LAN users share one public IP to reach the internet. DNAT, Destination NAT, changes the destination address: one public IP maps to a private server. In FortiGate, DNAT is done with a Virtual IP, or VIP."},
+{k:['central nat','policy nat'],a:"By default, FortiGate uses policy-based NAT: NAT settings live inside each policy. Central NAT moves all NAT rules into one separate table, which is cleaner in large networks with hundreds of policies. Keep policy NAT for small setups, choose Central NAT when NAT rules are shared across many policies."},
+{k:['ips','ids','intrusion'],a:"IDS only watches and alerts when it sees an attack signature. IPS sits in the traffic path and blocks the attack. FortiGate's IPS is inline, so it can drop malicious packets before they reach the server. Remember: IPS blocks, IDS only reports."},
+{k:['ssl inspection','deep inspection','certificate inspection'],a:"Most web traffic is encrypted with HTTPS, so a firewall cannot see inside it without decrypting it first. SSL inspection decrypts, inspects, then re-encrypts traffic using a FortiGate certificate. Certificate inspection only checks the server certificate, without decrypting content. Deep inspection decrypts the whole session and applies antivirus and web filter, but it is heavier on CPU and needs the CA certificate on user devices."},
+{k:['web filter','application control'],a:"Web Filter controls websites by category, like social media or gambling, and by URL. Application Control controls applications by behaviour, for example allow WhatsApp chat but block WhatsApp file transfer. Together they stop bad sites and risky apps, even when both use port 443."},
+{k:['ipsec','phase 1','phase 2','ike'],a:"IPsec VPN has two phases. Phase 1, IKE, builds a secure management tunnel: the two firewalls authenticate each other and agree on encryption. Phase 2 builds the data tunnel inside it and agrees on which networks may use it. If Phase 1 is down, nothing works. If Phase 2 is down, the tunnel is up but no traffic passes, usually a selector mismatch."},
+{k:['ssl vpn','tunnel mode','web mode'],a:"SSL VPN is for travelling users: it works from a browser or a light client and passes through most firewalls. Web mode gives a browser portal with bookmarks to internal web apps, no client install needed. Tunnel mode installs FortiClient and gives full network access, like being in the office, so it needs stricter policies and often multi-factor authentication."},
+{k:['split tunnel'],a:"Split tunnelling sends only office traffic through the VPN and lets internet traffic go direct. It saves VPN bandwidth but is less secure, because the device is on two networks at once. Full tunnelling sends everything through the VPN and is preferred for strict security."},
+{k:['ha','high availability','active passive'],a:"FortiGate HA pairs two FortiGates so one takes over if the other fails. In Active-Passive mode, one handles all traffic and the other waits. In Active-Active mode, both handle traffic. Configuration syncs automatically, and session pickup keeps existing connections alive during failover."},
+{k:['vdom'],a:"A VDOM, Virtual Domain, splits one physical FortiGate into separate virtual firewalls, each with its own policies, routing and administrators. Service providers use VDOMs to serve many customers on one box."},
+{k:['fortimanager','fortianalyzer'],a:"FortiManager centrally manages many FortiGates: push policies, firmware and objects from one place. FortiAnalyzer centrally collects logs, reports and alerts. Together they are the Fortinet pair: Manager for control, Analyzer for visibility."},
+{k:['asa','palo alto','fortigate vs'],a:"FortiGate offers best value, strong SD-WAN, and is very common in Indian enterprises. Cisco ASA and FTD are strong in Cisco-only shops, with deep Cisco integration. Palo Alto has the strongest application and threat intelligence story, at a premium price, very common in large enterprises. Compare features and cost, not just brand."},
+{k:['troubleshoot','internet is down','cannot reach','debug flow'],a:"Troubleshoot in order: 1, is the link up? 2, is the IP and gateway correct? 3, is there a route? 4, does a firewall policy allow it, and is NAT on? 5, is DNS working? 6, check the log and the policy ID. On FortiGate, use diagnose debug flow to trace one packet, and diagnose sniffer packet to see if a packet arrives at all."},
+{k:['gre','dmvpn'],a:"GRE is a simple tunnel that carries many protocols but does not encrypt. IPsec encrypts but only carries IP unicast. DMVPN combines them: it uses mGRE plus IPsec so many branch offices can build dynamic spoke-to-spoke tunnels through one hub, without a tunnel configured for every pair of sites."},
+{k:['copp'],a:"Control Plane Policing, CoPP, protects the router's CPU from overload. Management traffic like SSH and routing protocol packets get guaranteed CPU, while a flood of unwanted traffic to the router itself gets rate-limited or dropped. Without CoPP, a simple flood can make a router stop routing."}
+];
+function norm(s){ return (s||'').toLowerCase(); }
+function findAnswer(text) {
+  var t = norm(text);
+  if (/(^|\b)(hi|hello|hey)\b/.test(t) && t.length < 20) return "Hi there! I am your Study Buddy. Ask me anything about CCNP or FortiGate, in simple words. Try: what is OSPF, or what is a firewall?";
+  if (/thank/.test(t)) return "You are most welcome! Keep going, one topic at a time. Ask me another one whenever you are ready.";
+  if (/who are you|your name/.test(t)) return "I am the AI Study Buddy, a study helper for CCNP and FortiGate. I answer in super-simple words, with an example, and I can say the answer out loud too.";
+  var best = null, bestScore = 0;
+  for (var i = 0; i < QA.length; i++) {
+    var score = 0;
+    for (var j = 0; j < QA[i].k.length; j++) {
+      if (t.indexOf(QA[i].k[j]) !== -1) score += QA[i].k[j].length >= 4 ? 3 : 2;
+    }
+    if (score > bestScore) { bestScore = score; best = QA[i]; }
+  }
+  if (best && bestScore >= 2) return best.a;
+  return "I am not sure about that one yet. Try asking about one of these, in simple words: OSPF, EIGRP, BGP, STP, VLAN, EtherChannel, HSRP, QoS, firewall, NAT, VIP, IPS, SSL inspection, IPsec VPN, SSL VPN, FortiGate HA, or SD-WAN. For example, type: what is OSPF in simple words?";
+}
+var plushies = [
+  ['Switchy the Bunny','What is a VLAN?'],
+  ['Ollie the Owl','What is OSPF in simple words?'],
+  ['Ellie the Elephant','What is EIGRP?'],
+  ['Benny the Guard','What is BGP?'],
+  ['Fiona the Fox','What is a firewall?'],
+  ['Vinny the Turtle','What is a VPN?'],
+  ['Queenie the Cat','What is QoS?'],
+  ['Natty the Bear','SNAT vs DNAT']
+];
+var plushEl = document.getElementById('plushies');
+plushies.forEach(function(p){
+  var b = document.createElement('button');
+  b.className = 'chip'; b.type = 'button'; b.textContent = p[0];
+  b.onclick = function(){ ask(p[1]); };
+  plushEl.appendChild(b);
+});
+function ask(text) {
+  addMsg(text, 'user');
+  setTimeout(function(){ botSay(findAnswer(text)); }, 250);
+}
+document.getElementById('sendBtn').onclick = function(){
+  var v = inputEl.value.trim();
+  if (!v) return;
+  inputEl.value = '';
+  ask(v);
+};
+inputEl.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') document.getElementById('sendBtn').click();
+});
+document.querySelectorAll('[data-q]').forEach(function(el){
+  el.addEventListener('click', function(){ ask(el.getAttribute('data-q')); });
+});
+botSay("Hi there, I'm Buddy! Ask me anything about CCNP or FortiGate, and I will explain it super simply, with an example, and say it out loud. Try tapping a plushie friend above, or type: what is OSPF?");
+
+var QUIZ = [
+{q:"What does a VLAN do?",o:["Splits one switch into separate logical networks","Makes Wi-Fi faster","Encrypts all traffic","Replaces a router"],a:0,e:"A VLAN is like separate rooms in one house. Sales in VLAN 10 talks to Sales only, HR in VLAN 20 talks to HR only."},
+{q:"What is STP for?",o:["Stopping loops in a switched network","Encrypting VPN traffic","Assigning IP addresses","Blocking websites"],a:0,e:"Without STP, broadcast frames circle forever in a triangle of switches and crash the network. STP blocks one link."},
+{q:"Which OSPF area is the backbone?",o:["Area 1","Area 0","Area 100","Area 2"],a:1,e:"Area 0 is the backbone. Every other area must connect to it, like every room opens onto the main hall."},
+{q:"OSPF uses which metric?",o:["Hop count","Bandwidth and delay","Cost","AS Path"],a:2,e:"OSPF cost = reference bandwidth divided by interface bandwidth. Lower cost wins."},
+{q:"In EIGRP, what is a feasible successor?",o:["The slowest route","A ready, loop-free backup route","The default gateway","A firewall rule"],a:1,e:"Main road = successor. Side road already checked = feasible successor. If the main road closes, you turn at once."},
+{q:"BGP first checks which attribute?",o:["MED","Weight (Cisco-only)","Hop count","Router ID"],a:1,e:"BGP order: highest Weight, then highest Local Preference, then shortest AS Path. Most interviews only need the first three."},
+{q:"eBGP vs iBGP: which runs between different AS numbers?",o:["iBGP","eBGP","Both","Neither"],a:1,e:"eBGP is between different AS numbers, iBGP is inside the same AS. eBGP distance 20, iBGP distance 200."},
+{q:"Which EtherChannel protocol is the open standard?",o:["PAgP","LACP","HSRP","VRRP"],a:1,e:"LACP (802.3ad) works between vendors. PAgP is Cisco-only. In interviews, always recommend LACP."},
+{q:"HSRP, VRRP, GLBP: which one load-balances?",o:["HSRP","VRRP","GLBP","None"],a:2,e:"HSRP is Cisco, VRRP is open standard, GLBP is Cisco and load-balances, so different PCs use different active routers."},
+{q:"What does QoS prioritise first?",o:["File downloads","Voice and video calls","Email attachments","Backups"],a:1,e:"Voice and video go first, because delay ruins a call. Downloads can wait."},
+{q:"Standard ACL: place it where?",o:["Close to the source","Close to the destination","On the firewall only","Anywhere"],a:1,e:"Standard ACL filters only by source, so place it close to the destination, or it blocks too much. Extended ACL goes close to the source."},
+{q:"What does DHCP Snooping stop?",o:["Slow Wi-Fi","Fake DHCP servers","VPN failures","BGP loops"],a:1,e:"It trusts only the real DHCP server port and blocks fake servers, building a table used by DAI too."},
+{q:"A firewall denies by default. True or false?",o:["True","False"],a:0,e:"Default deny: everything not explicitly allowed is denied. In FortiGate, the last implicit rule is deny."},
+{q:"Stateful vs stateless: which remembers connections?",o:["Stateless","Stateful","Both","Neither"],a:1,e:"Stateful remembers sessions: if you start a connection from inside, the reply is automatically allowed back."},
+{q:"SNAT is used when?",o:["Publishing a server to the internet","LAN users go to the internet behind one public IP","Blocking a website","Encrypting a tunnel"],a:1,e:"SNAT changes the source address. Many private IPs share one public IP on the way out. DNAT / VIP does the reverse."},
+{q:"A FortiGate VIP alone publishes a server. True or false?",o:["True","False"],a:1,e:"False. A VIP maps public IP and port to an internal server, but it does nothing until a firewall policy references it."},
+{q:"IPS vs IDS: which one blocks attacks?",o:["IDS","IPS","Both only report","Neither"],a:1,e:"IPS blocks, IDS only reports. FortiGate IPS is inline, so it drops malicious packets before they reach the server."},
+{q:"IPsec Phase 1 does what?",o:["Carries user data","Builds the secure management tunnel and agrees encryption","Assigns DHCP addresses","Checks antivirus"],a:1,e:"Phase 1 (IKE) authenticates the two firewalls and agrees encryption. Phase 2 then carries the actual data."},
+{q:"SSL VPN web mode vs tunnel mode: which needs no client install?",o:["Tunnel mode","Web mode","Both need FortiClient","Neither"],a:1,e:"Web mode gives a browser portal with bookmarks, no install. Tunnel mode installs FortiClient and gives full network access."},
+{q:"FortiGate HA Active-Passive means?",o:["Both handle traffic","One handles traffic, the other waits","No failover","Two separate firewalls, no sync"],a:1,e:"Active-Passive: one active, one waiting. Active-Active: both share the load. Config syncs automatically."},
+{q:"SD-WAN picks a link based on what?",o:["Colour of the cable","Application needs and link health (delay, loss)","Time of day only","User's name"],a:1,e:"SD-WAN monitors latency, jitter and loss, and steers each app to the best link. Voice takes the cleanest, downloads take the cheapest."},
+{q:"OSPF stuck in ExStart usually means?",o:["Wrong password only","MTU mismatch","No internet","VLAN missing"],a:1,e:"ExStart stuck is the classic MTU mismatch clue. Stuck in 2-Way usually means a DR/BDR election issue."},
+{q:"Troubleshooting order, first step?",o:["Check NAT","Check the physical link","Reboot everything","Check BGP"],a:1,e:"Order: link, IP, route, policy, NAT, application. Saying the order out loud is what makes you sound like a real engineer."},
+{q:"What is a DMZ used for?",o:["Office PCs only","Public servers like a website, separated from the LAN","VPN users only","Backup storage"],a:1,e:"The website sits in the DMZ, not on the LAN. Internet may reach it on port 443 only, and DMZ to LAN is blocked, so a hacked website cannot reach office PCs."}
+];
+var qi = 0, qscore = 0, qstreak = 0, qAnswered = false;
+var quizQEl = document.getElementById('quizQ');
+var quizOptsEl = document.getElementById('quizOpts');
+var quizFbEl = document.getElementById('quizFeedback');
+var quizScoreEl = document.getElementById('quizScore');
+var quizBtn = document.getElementById('quizBtn');
+var quizNext = document.getElementById('quizNext');
+function quizUpdate() { quizScoreEl.textContent = 'Score: ' + qscore + '  |  Streak: ' + qstreak + '  |  Question: ' + (qi + 1) + ' of ' + QUIZ.length; }
+function quizShow() {
+  qAnswered = false;
+  var item = QUIZ[qi];
+  quizUpdate();
+  quizQEl.textContent = 'Q' + (qi + 1) + '. ' + item.q;
+  quizFbEl.textContent = '';
+  quizOptsEl.innerHTML = '';
+  quizNext.style.display = 'none';
+  item.o.forEach(function(opt, idx){
+    var b = document.createElement('button');
+    b.className = 'opt'; b.type = 'button'; b.textContent = opt;
+    b.onclick = function(){ quizAnswer(idx, b); };
+    quizOptsEl.appendChild(b);
+  });
+}
+function quizAnswer(idx, btn) {
+  if (qAnswered) return;
+  qAnswered = true;
+  var item = QUIZ[qi];
+  var btns = quizOptsEl.querySelectorAll('button');
+  btns[item.a].classList.add('right');
+  if (idx === item.a) {
+    qscore++; qstreak++;
+    quizFbEl.textContent = 'Nailed it! ' + item.e;
+  } else {
+    btn.classList.add('wrong');
+    qstreak = 0;
+    quizFbEl.textContent = 'Not quite. The right answer is: ' + item.o[item.a] + '. ' + item.e;
+  }
+  quizUpdate();
+  speak(quizFbEl.textContent);
+  if (qi < QUIZ.length - 1) { quizNext.style.display = 'inline-block'; quizNext.textContent = 'Next Question'; }
+  else { quizNext.style.display = 'inline-block'; quizNext.textContent = 'See Final Score'; }
+}
+quizBtn.onclick = function(){ qi = 0; qscore = 0; qstreak = 0; quizBtn.textContent = 'Restart Quiz'; quizShow(); };
+quizNext.onclick = function(){
+  if (qi < QUIZ.length - 1) { qi++; quizShow(); }
+  else {
+    quizQEl.textContent = 'Quiz finished! Final score: ' + qscore + ' out of ' + QUIZ.length + '. Great work, one more round?';
+    quizOptsEl.innerHTML = '';
+    quizFbEl.textContent = 'Tap Restart Quiz to play again, or ask the chat about any topic you missed.';
+    quizNext.style.display = 'none';
+    speak(quizQEl.textContent);
+  }
+};
+</script>
+</body>
+</html>
