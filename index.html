@@ -38,6 +38,13 @@ button.send{background:#C1663E;color:#fff;border:none;border-radius:8px;padding:
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .chip{border:1.5px solid #B07D3C;background:#fff;color:#7A5C33;border-radius:20px;padding:7px 13px;cursor:pointer;font-size:14px;font-weight:bold}
 .chip:hover{background:#FDF6EA}
+.friends{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.friend{border:1.5px solid #E3D5BC;background:#fff;border-radius:14px;padding:10px 6px;cursor:pointer;text-align:center}
+.friend:hover{background:#FDF6EA;border-color:#B07D3C}
+.friend svg{width:72px;height:72px;border:none;background:none;margin:0}
+.friend b{display:block;font-size:13px;margin-top:2px}
+.friend span{font-size:12px;color:#7A5C33}
+@media(max-width:600px){.friends{grid-template-columns:repeat(2,1fr)}}
 .toggle{border:1.5px solid #B07D3C;background:#fff;color:#7A5C33;border-radius:20px;padding:8px 14px;cursor:pointer;font-weight:bold}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .opt{display:block;width:100%;text-align:left;margin:0 0 8px;padding:12px 14px;border:1.5px solid #E3D5BC;background:#fff;border-radius:10px;font-size:15px;cursor:pointer}
@@ -60,7 +67,7 @@ svg{width:100%;height:auto;background:#FFFDF8;border:1px solid #E3D5BC;border-ra
 <div class="card">
 <h2>Meet your plushie teachers</h2>
 <p>Tap a friend to ask about their topic. <b>Switchy</b> (switching), <b>Ollie</b> (OSPF), <b>Ellie</b> (EIGRP), <b>Benny</b> (BGP), <b>Fiona</b> (firewall), <b>Vinny</b> (VPN), <b>Queenie</b> (QoS), <b>Natty</b> (NAT). Or just type anything, like "what is OSPF in simple words?"</p>
-<div class="chips" id="plushies"></div>
+<div class="friends" id="plushies"></div>
 </div>
 
 <div class="topbar">
@@ -249,20 +256,21 @@ function findAnswer(text) {
   return "I am not sure about that one yet. Try asking about one of these, in simple words: OSPF, EIGRP, BGP, STP, VLAN, EtherChannel, HSRP, QoS, firewall, NAT, VIP, IPS, SSL inspection, IPsec VPN, SSL VPN, FortiGate HA, or SD-WAN. For example, type: what is OSPF in simple words?";
 }
 var plushies = [
-  ['Switchy the Bunny','What is a VLAN?'],
-  ['Ollie the Owl','What is OSPF in simple words?'],
-  ['Ellie the Elephant','What is EIGRP?'],
-  ['Benny the Guard','What is BGP?'],
-  ['Fiona the Fox','What is a firewall?'],
-  ['Vinny the Turtle','What is a VPN?'],
-  ['Queenie the Cat','What is QoS?'],
-  ['Natty the Bear','SNAT vs DNAT']
+  ['Switchy the Bunny','Switching','What is a VLAN?','<svg viewBox="0 0 100 100"><ellipse cx="38" cy="22" rx="9" ry="22" fill="#FFFDF8" stroke="#E8C9A8" stroke-width="2"/><ellipse cx="62" cy="22" rx="9" ry="22" fill="#FFFDF8" stroke="#E8C9A8" stroke-width="2"/><ellipse cx="38" cy="24" rx="4" ry="12" fill="#F3C6C6"/><ellipse cx="62" cy="24" rx="4" ry="12" fill="#F3C6C6"/><circle cx="50" cy="62" r="28" fill="#FFFDF8" stroke="#E3D5BC" stroke-width="2"/><circle cx="40" cy="58" r="3.5" fill="#2B2118"/><circle cx="60" cy="58" r="3.5" fill="#2B2118"/><ellipse cx="50" cy="68" rx="5" ry="4" fill="#C1663E"/><path d="M50 72 Q50 77 44 77 M50 72 Q50 77 56 77" stroke="#2B2118" stroke-width="1.5" fill="none"/></svg>'],
+  ['Ollie the Owl','OSPF','What is OSPF in simple words?','<svg viewBox="0 0 100 100"><ellipse cx="50" cy="58" rx="32" ry="30" fill="#B07D3C"/><ellipse cx="50" cy="58" rx="22" ry="20" fill="#F7ECD6"/><circle cx="38" cy="50" r="11" fill="#FFFDF8"/><circle cx="62" cy="50" r="11" fill="#FFFDF8"/><circle cx="38" cy="50" r="5" fill="#2B2118"/><circle cx="62" cy="50" r="5" fill="#2B2118"/><polygon points="50,58 45,64 55,64" fill="#C1663E"/><ellipse cx="20" cy="58" rx="6" ry="14" fill="#7A5C33"/><ellipse cx="80" cy="58" rx="6" ry="14" fill="#7A5C33"/></svg>'],
+  ['Ellie the Elephant','EIGRP','What is EIGRP?','<svg viewBox="0 0 100 100"><circle cx="22" cy="48" r="18" fill="#C9C9C9"/><circle cx="78" cy="48" r="18" fill="#C9C9C9"/><circle cx="50" cy="52" r="30" fill="#D9D9D9"/><circle cx="40" cy="48" r="3.5" fill="#2B2118"/><circle cx="60" cy="48" r="3.5" fill="#2B2118"/><path d="M50 58 Q48 78 58 80 Q64 81 62 74" stroke="#C9C9C9" stroke-width="9" fill="none" stroke-linecap="round"/></svg>'],
+  ['Benny the Guard','BGP','What is BGP?','<svg viewBox="0 0 100 100"><ellipse cx="22" cy="52" rx="10" ry="18" fill="#7A5C33"/><ellipse cx="78" cy="52" rx="10" ry="18" fill="#7A5C33"/><circle cx="50" cy="58" r="28" fill="#E8C9A8"/><circle cx="40" cy="54" r="3.5" fill="#2B2118"/><circle cx="60" cy="54" r="3.5" fill="#2B2118"/><ellipse cx="50" cy="68" rx="9" ry="7" fill="#FFFDF8"/><ellipse cx="50" cy="66" rx="4" ry="3" fill="#2B2118"/><rect x="24" y="24" width="52" height="14" rx="7" fill="#2B2118"/><rect x="20" y="36" width="60" height="5" rx="2" fill="#2B2118"/></svg>'],
+  ['Fiona the Fox','Firewall','What is a firewall?','<svg viewBox="0 0 100 100"><polygon points="22,18 30,48 48,38" fill="#C1663E"/><polygon points="78,18 70,48 52,38" fill="#C1663E"/><polygon points="28,24 32,44 44,38" fill="#F3C6C6"/><polygon points="72,24 68,44 56,38" fill="#F3C6C6"/><circle cx="50" cy="60" r="28" fill="#E8913A"/><ellipse cx="50" cy="72" rx="12" ry="8" fill="#FFFDF8"/><circle cx="40" cy="56" r="3.5" fill="#2B2118"/><circle cx="60" cy="56" r="3.5" fill="#2B2118"/><ellipse cx="50" cy="68" rx="4" ry="3" fill="#2B2118"/></svg>'],
+  ['Vinny the Turtle','VPN','What is a VPN?','<svg viewBox="0 0 100 100"><circle cx="50" cy="58" r="30" fill="#7A9A4A"/><circle cx="50" cy="58" r="20" fill="#A8C686"/><path d="M40 52 L60 52 M50 42 L50 74 M38 58 L62 58" stroke="#7A9A4A" stroke-width="2"/><circle cx="80" cy="48" r="13" fill="#A8C686"/><circle cx="83" cy="46" r="2.5" fill="#2B2118"/><circle cx="22" cy="82" r="7" fill="#7A9A4A"/><circle cx="78" cy="82" r="7" fill="#7A9A4A"/></svg>'],
+  ['Queenie the Cat','QoS','What is QoS?','<svg viewBox="0 0 100 100"><polygon points="26,20 30,46 48,36" fill="#E8913A"/><polygon points="74,20 70,46 52,36" fill="#E8913A"/><circle cx="50" cy="60" r="28" fill="#F3C08A"/><circle cx="40" cy="56" r="3.5" fill="#2B2118"/><circle cx="60" cy="56" r="3.5" fill="#2B2118"/><ellipse cx="50" cy="68" rx="4" ry="3" fill="#C1663E"/><line x1="22" y1="62" x2="36" y2="64" stroke="#2B2118" stroke-width="1.2"/><line x1="22" y1="70" x2="36" y2="68" stroke="#2B2118" stroke-width="1.2"/><line x1="78" y1="62" x2="64" y2="64" stroke="#2B2118" stroke-width="1.2"/><line x1="78" y1="70" x2="64" y2="68" stroke="#2B2118" stroke-width="1.2"/></svg>'],
+  ['Natty the Bear','NAT','SNAT vs DNAT','<svg viewBox="0 0 100 100"><circle cx="28" cy="32" r="12" fill="#7A5C33"/><circle cx="72" cy="32" r="12" fill="#7A5C33"/><circle cx="28" cy="32" r="6" fill="#E8C9A8"/><circle cx="72" cy="32" r="6" fill="#E8C9A8"/><circle cx="50" cy="58" r="30" fill="#8A6B42"/><ellipse cx="50" cy="68" rx="13" ry="9" fill="#E8C9A8"/><circle cx="40" cy="52" r="3.5" fill="#2B2118"/><circle cx="60" cy="52" r="3.5" fill="#2B2118"/><ellipse cx="50" cy="64" rx="4" ry="3" fill="#2B2118"/></svg>']
 ];
 var plushEl = document.getElementById('plushies');
 plushies.forEach(function(p){
   var b = document.createElement('button');
-  b.className = 'chip'; b.type = 'button'; b.textContent = p[0];
-  b.onclick = function(){ ask(p[1]); };
+  b.className = 'friend'; b.type = 'button';
+  b.innerHTML = p[3] + '<b>' + p[0] + '</b><span>' + p[1] + '</span>';
+  b.onclick = function(){ ask(p[2]); };
   plushEl.appendChild(b);
 });
 function ask(text) {
